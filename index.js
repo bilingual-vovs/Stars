@@ -125,7 +125,8 @@ let restart = () => {
 }
 
 let inputChange = (evt) => {
-    controlsData[ID_TO_NAMES.name(evt.path[0].id)] = evt.path[0].value
+
+    controlsData[ID_TO_NAMES.name(evt.target.id)] = evt.target.value
     
     restart()
 }
@@ -166,7 +167,7 @@ addEventListener("resize", (evt) => {
 
 
 addEventListener("keypress", (evt) => { 
-    if (evt.key == 'q'){
+    if (evt.code == 'KeyQ'){
         controls()
     }
 })
