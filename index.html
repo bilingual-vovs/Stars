@@ -2,13 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stars</title>
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <canvas id="canvas" width="1000" height="1000" style="background-color: black;" >
-        
-    </canvas>
+    <canvas id="canvas" style="background-color: black;" ></canvas>
+
+    <div id='qoute-box' class="quote-container">
+        <h1 class="quote">Press 'Q' to open settings<button class="quote-btn">❌</btton></h1>
+    </div>
+
+    <div id="controls" class="controls">
+        <div class="control-box">
+            <h2 class="inp-name">Star size</h2>
+            <input id="star-size" type="number" class="control-inp">
+        </div>
+        <div class="control-box">
+            <h2 class="inp-name">Star speed</h2>
+            <input id="star-speed" type="number" class="control-inp">
+        </div>
+        <div class="control-box">
+            <h2 class="inp-name">Connection distance</h2>
+            <input id="connextion-dist" type="number" class="control-inp">
+        </div>
+        <div class="control-box">
+            <h2 class="inp-name">Line thickness</h2>
+            <input id="line-thickness" type="number" class="control-inp">
+        </div>
+        <div class="control-box">
+            <h2 class="inp-name">Star amount</h2>
+            <input id="star-amount" type="number" class="control-inp">
+        </div>
+        <div class="control-box">
+            <h2 class="inp-name">Updates per second</h2>
+            <input id="ups" type="number" class="control-inp">
+        </div>
+    </div>
     <script src="./index.js"></script>
 </body>
 </html>
