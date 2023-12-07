@@ -8,77 +8,9 @@ body{
     overflow-y: hidden;
     overflow-x: hidden;
 }
-
 html{
     width: 100vw;
     height: 102vh;
 }
 
 
-.controls{
-    position: fixed;
-    z-index: 9;
-    top: 30px;
-    left: 40px;
-}
-
-.control-inp {
-    background-color: #333; /* Set the background color for the input */
-    color: #eee; /* Set the text color inside the input */
-    border: none; /* Remove the border */
-    border-radius: 8px; /* Add rounded corners */
-    padding: 8px; /* Adjust the padding as needed */
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
-    font-family: "Arial", sans-serif; /* Choose the same font as body */
-    font-size: 14px; 
-    margin: 0px;
-}
-
-.control-box{
-    margin: 10px;
-}
-
-.inp-name{
-    font-family: "Arial", sans-serif; /* Choose your preferred font */
-    font-size: 16px; /* Adjust the font size as needed */
-    color: #2e3b8b;
-    margin: 1px;
-}
-
-.quote-container {
-    position: fixed;
-    top: 10px; /* Adjust the top position as needed */
-    right: 10px; /* Adjust the right position as needed */
-    background-color: transparent; /* Set the background color of the container */
-}
-
-.quote-container {
-    position: fixed;
-    top: 10px; /* Adjust the top position as needed */
-    right: 10px; /* Adjust the right position as needed */
-    background-color: transparent; /* Set the background color of the container */
-    animation: blink 5s infinite; /* Apply the blink animation */
-}
-
-.quote {
-    cursor: pointer;
-    font-family: "Arial", sans-serif; /* Choose your preferred font */
-    font-size: 16px; /* Adjust the font size as needed */
-    color: #fff; /* Set the text color */
-    font-style: italic; /* Add italic style to the text */
-}
-
-.quote-btn{
-    background-color: rgba(0, 0, 0, 0);
-    font-size: 19px;
-    border: none;
-}
-
-@keyframes blink {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0;
-    }
-}
