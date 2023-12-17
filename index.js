@@ -2,12 +2,12 @@ let SPACE_SIZE_X = () => window.innerWidth
 let SPACE_SIZE_Y = () => window.innerHeight
 
 let controlsData = {
-    MAX_STAR_SIZE: 3,
-    MAX_STAR_SPEED: 100,
-    CONNECTION_DISTANCE: 200,
+    MAX_STAR_SIZE: -1,
+    MAX_STAR_SPEED: 0,
+    CONNECTION_DISTANCE: 400,
     LINE_THICKNESS_INDEX: 3,
-    STARS_AMOUNT: 80,
-    UPS: 30
+    STARS_AMOUNT: 1000,
+    UPS: 60
 }
 
 class IdContainer {
@@ -48,7 +48,16 @@ class Star{
     posX = Math.floor(Math.random()*SPACE_SIZE_X())
     posY = Math.floor(Math.random()*SPACE_SIZE_Y())
     size = 1 + Math.floor(Math.random()*controlsData.MAX_STAR_SIZE)
-    color = `rgba(256, 256, 256, ${50 + Math.floor(Math.random()*50)})`
+    sizeChange = Math.random()
+    color = {
+        r: Math.floor(Math.random()*256),
+        g: Math.floor(Math.random()*256),
+        b: Math.floor(Math.random()*256),
+        a: Math.floor(Math.random()*50)+50,
+    }
+    colorSpeedR = Math.floor(Math.random()*10)
+    colorSpeedG = Math.floor(Math.random()*10)
+    colorSpeedB = Math.floor(Math.random()*10)
     speedX = controlsData.MAX_STAR_SPEED/2 - Math.random()*controlsData.MAX_STAR_SPEED
     speedY = controlsData.MAX_STAR_SPEED/2 - Math.random()*controlsData.MAX_STAR_SPEED
 
@@ -61,7 +70,24 @@ class Star{
         
     }
 
+    colorX = () => {
+
+        if (this.color.r > 256 || this.color.r < 0){
+            this.colorSpeedR = 0-this.colorSpeedR
+        }
+        if (this.color.g > 256 || this.color.g < 0){
+            this.colorSpeedG = 0-this.colorSpeedG
+        }
+        if (this.color.b > 256 || this.color.b < 0){
+            this.colorSpeedB = 0-this.colorSpeedB
+        }
+        this.color.r += this.colorSpeedR
+        this.color.g += this.colorSpeedG
+        this.color.b += this.colorSpeedB
+    }
+
     move = () => {
+        this.colorX()
         this.posX += this.speedX/this.ups
         this.posY += this.speedY/this.ups
         if (this.posX > SPACE_SIZE_X() || this.posX < 0){
@@ -73,11 +99,15 @@ class Star{
     }
 
     connectTo = (x, y, dist) => {
+        let {r, g, b, a} = this.color
+        let grad = ctx.createLinearGradient(this.posX, this.posY, x, y)
+        grad.addColorStop(0, "black");
+        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, ${a})`);
         ctx.beginPath()
         ctx.moveTo(this.posX, this.posY)
         ctx.lineTo(x, y)
         ctx.lineWidth = this.lineThicknessInd - dist/(this.lineDist/this.lineThicknessInd)
-        ctx.strokeStyle = this.color
+        ctx.strokeStyle = grad
         ctx.stroke()
     }
 
@@ -94,7 +124,8 @@ class Star{
 const update = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach(el => {
-        ctx.fillStyle = el.color
+        let {r, g, b, a} = el.color
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`
         ctx.fillRect(el.posX, el.posY, el.size, el.size)
         el.isClose(mouse.x, mouse.y)
         el.move()
@@ -119,6 +150,7 @@ let startSim = () => {
 }
 
 let restart = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars = []
     clearInterval(interval)
     startSim()
