@@ -2,11 +2,8 @@ let SPACE_SIZE_X = () => window.innerWidth
 let SPACE_SIZE_Y = () => window.innerHeight
 
 let controlsData = {
-    MAX_STAR_SIZE: -1,
-    MAX_STAR_SPEED: 0,
-    CONNECTION_DISTANCE: 400,
-    LINE_THICKNESS_INDEX: 3,
-    STARS_AMOUNT: 1000,
+    ITERATIONS: 5,
+    ANGLE: 60,
     UPS: 60
 }
 
@@ -44,114 +41,66 @@ let ID_TO_NAMES = new IdContainer([
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-class Star{
-    posX = Math.floor(Math.random()*SPACE_SIZE_X())
-    posY = Math.floor(Math.random()*SPACE_SIZE_Y())
-    size = 1 + Math.floor(Math.random()*controlsData.MAX_STAR_SIZE)
-    sizeChange = Math.random()
-    color = {
-        r: Math.floor(Math.random()*256),
-        g: Math.floor(Math.random()*256),
-        b: Math.floor(Math.random()*256),
-        a: Math.floor(Math.random()*50)+50,
-    }
-    colorSpeedR = Math.floor(Math.random()*10)
-    colorSpeedG = Math.floor(Math.random()*10)
-    colorSpeedB = Math.floor(Math.random()*10)
-    speedX = controlsData.MAX_STAR_SPEED/2 - Math.random()*controlsData.MAX_STAR_SPEED
-    speedY = controlsData.MAX_STAR_SPEED/2 - Math.random()*controlsData.MAX_STAR_SPEED
+lines = []
 
-    lineDist = controlsData.CONNECTION_DISTANCE
-    lineThicknessInd = controlsData.LINE_THICKNESS_INDEX
+class KohaLine{
 
-    ups = controlsData.UPS
-
-    constructor(){
-        
+    constructor(a, b){
+        this.a = a
+        this.b = b
+        this.l = Math.sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1] - b[1])*(a[1] - b[1]))
+        this.a3 = [(2*a[0]+b[0])/3, (2*a[1]+b[1])/3]
+        this.b3 = [(2*b[0]+a[0])/3, (2*b[1]+a[1])/3]
+        lines.push(this)
     }
 
-    colorX = () => {
-
-        if (this.color.r > 256 || this.color.r < 0){
-            this.colorSpeedR = 0-this.colorSpeedR
-        }
-        if (this.color.g > 256 || this.color.g < 0){
-            this.colorSpeedG = 0-this.colorSpeedG
-        }
-        if (this.color.b > 256 || this.color.b < 0){
-            this.colorSpeedB = 0-this.colorSpeedB
-        }
-        this.color.r += this.colorSpeedR
-        this.color.g += this.colorSpeedG
-        this.color.b += this.colorSpeedB
+    generateKoha = () => {
+        new KohaLine(this.a3, [this.a3[0] +  this.l/3 * Math.sin(controlsData.ANGLE*Math.PI/180), this.a3[1] -  this.l * Math.cos(controlsData.ANGLE*Math.PI/180)])
+        console.log([this.a3[0] +  this.l/3 * Math.sin(controlsData.ANGLE*Math.PI/180), this.a3[1] -  this.l * Math.cos(controlsData.ANGLE*Math.PI/180)])
+        new KohaLine([this.a3[0] +  this.l/3 * Math.sin(controlsData.ANGLE*Math.PI/180), this.a3[1] -  this.l * Math.cos(controlsData.ANGLE*Math.PI/180)], this.b3)
     }
 
-    move = () => {
-        this.colorX()
-        this.posX += this.speedX/this.ups
-        this.posY += this.speedY/this.ups
-        if (this.posX > SPACE_SIZE_X() || this.posX < 0){
-            this.speedX = 0-this.speedX
-        }
-        if (this.posY > SPACE_SIZE_Y() || this.posY < 0){
-            this.speedY = 0-this.speedY
-        }
-    }
 
-    connectTo = (x, y, dist) => {
-        let {r, g, b, a} = this.color
-        let grad = ctx.createLinearGradient(this.posX, this.posY, x, y)
-        grad.addColorStop(0, "black");
-        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, ${a})`);
-        ctx.beginPath()
-        ctx.moveTo(this.posX, this.posY)
-        ctx.lineTo(x, y)
-        ctx.lineWidth = this.lineThicknessInd - dist/(this.lineDist/this.lineThicknessInd)
-        ctx.strokeStyle = grad
-        ctx.stroke()
-    }
+    draw = () => {
+        let {a, b} = this
+        ctx.strokeStyle = 'white'
+        ctx.lineWidth = 2
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
 
-    isClose = (x, y) => {
-        let x2 = this.posX - x
-        let y2 = this.posY - y
-        let dist = Math.sqrt(x2*x2 + y2*y2)
-        if (dist < this.lineDist){
-            this.connectTo(x, y, dist)
-        }
+        ctx.stroke();
     }
 }
+
 
 const update = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(el => {
-        let {r, g, b, a} = el.color
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`
-        ctx.fillRect(el.posX, el.posY, el.size, el.size)
-        el.isClose(mouse.x, mouse.y)
-        el.move()
+    lines.forEach(line => {
+        line.draw()
     });
 }
-
-let stars = []
 
 let interval
 
 let startSim = () => {
-    for (let i = 0; i < controlsData.STARS_AMOUNT; i++){
-        stars.push(new Star())
+    new KohaLine([100,500], [400, 500])
+    for (let i = 0; i<5; i++){
+        console.log(lines.length)
+        for(let x = lines.lenght; x>=0;x--){
+            lines[x].generateKoha()
+        }
     }
-
-    mouse = {
-        x: SPACE_SIZE_X() + controlsData.CONNECTION_DISTANCE + 20,
-        y: SPACE_SIZE_Y() + controlsData.CONNECTION_DISTANCE + 20
-    }
-
+    
+    console.log(lines)
     interval = setInterval(update, 1000/controlsData.UPS)
 }
 
+mouse = {x:0, y:0}
+
 let restart = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars = []
+    lines = []
     clearInterval(interval)
     startSim()
 }
@@ -169,8 +118,7 @@ let move = (evt) => {
 }
 
 let out = () => {
-    mouse.x = SPACE_SIZE_X() + controlsData.CONNECTION_DISTANCE + 20,
-    mouse.y = SPACE_SIZE_Y() + controlsData.CONNECTION_DISTANCE + 20
+
 }
 
 let controlsVisiability = false
