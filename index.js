@@ -2,8 +2,8 @@ let SPACE_SIZE_X = () => window.innerWidth
 let SPACE_SIZE_Y = () => window.innerHeight
 
 let controlsData = {
-    ITERATIONS: 5,
-    ANGLE: 60,
+    ITERATIONS: 2,
+    ANGLE: 45,
     UPS: 60
 }
 
@@ -41,62 +41,98 @@ let ID_TO_NAMES = new IdContainer([
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-lines = []
-
-class KohaLine{
-
+class Line{
     constructor(a, b){
-        this.a = a
-        this.b = b
-        this.l = Math.sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1] - b[1])*(a[1] - b[1]))
-        this.a3 = [(2*a[0]+b[0])/3, (2*a[1]+b[1])/3]
-        this.b3 = [(2*b[0]+a[0])/3, (2*b[1]+a[1])/3]
-        lines.push(this)
+        this.start = a
+        this.end = b
+    }
+    get length(){
+        let {start, end} = this
+        return Math.sqrt((start.x - end.x)*(start.x - end.x) + (start.y - end.y)* (start.y - end.y))
+    }
+    split = (n) => {
+        let res = []
+        let {start, end} = this
+        for(let i = 0; i<n;i++){
+            res.push(
+                new Line(
+                    new Point(start.x + (Math.abs(start.x - end.x)*i)/n,
+                    start.y + (Math.abs(start.y - end.y)*i)),
+                    new Point(start.x + (Math.abs(start.x - end.x)*(i+1))/n,
+                    start.y + (Math.abs(start.y - end.y)*(i+1)))
+                ))
+        }
+        return res
     }
 
-    generateKoha = () => {
-        new KohaLine(this.a3, [this.a3[0] +  this.l/3 * Math.sin(controlsData.ANGLE*Math.PI/180), this.a3[1] -  this.l * Math.cos(controlsData.ANGLE*Math.PI/180)])
-        console.log([this.a3[0] +  this.l/3 * Math.sin(controlsData.ANGLE*Math.PI/180), this.a3[1] -  this.l * Math.cos(controlsData.ANGLE*Math.PI/180)])
-        new KohaLine([this.a3[0] +  this.l/3 * Math.sin(controlsData.ANGLE*Math.PI/180), this.a3[1] -  this.l * Math.cos(controlsData.ANGLE*Math.PI/180)], this.b3)
+    get midPoint(){
+        let {start, end} = this
+        return new Point((start.x + end.x)/2, (start.y + end.y)/2)
     }
-
+    
+    pointOfTriengle = (angle) => {
+        let {start, midPoint} = this
+        let rad = angle*(Math.PI/180)
+        let gepo = start.distTo(midPoint) / Math.cos(rad)
+        console.log(start.distTo(midPoint) / Math.cos(rad), start.distTo(midPoint))
+        return new Point(start.x + gepo*Math.sin(rad), start.y + gepo*Math.cos(rad))
+    }
 
     draw = () => {
-        let {a, b} = this
+        let {start, end} = this
         ctx.strokeStyle = 'white'
         ctx.lineWidth = 2
         ctx.beginPath();
-        ctx.moveTo(a[0], a[1]);
-        ctx.lineTo(b[0], b[1]);
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
 
         ctx.stroke();
+    }
+
+}
+
+class Point{
+    constructor(x, y){
+        this.x = x
+        this.y = y
+    }
+    lineTo = (b) => {
+        return new Line(this, b)
+    }
+
+    distTo = (b) => {
+        let a = this
+        return Math.sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y) * (a.y - b.y))
     }
 }
 
 
+let lines = [new Line(new Point(200, 400), new Point(800, 400))]
+
+
 const update = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    lines.forEach(line => {
-        line.draw()
-    });
+    lines.forEach(el => el.draw())
 }
 
 let interval
 
 let startSim = () => {
-    new KohaLine([100,500], [400, 500])
-    for (let i = 0; i<5; i++){
-        console.log(lines.length)
-        for(let x = lines.lenght; x>=0;x--){
-            lines[x].generateKoha()
+    for(let i = 0; i<controlsData.ITERATIONS; i++){
+        l = lines.length
+        for(let j = 0; j < l;j++ ){
+            let line = lines.shift()
+            let newLines = line.split(3)
+            newLines[1] = new Line(newLines[1].start, newLines[1].pointOfTriengle(controlsData.ANGLE))
+            newLines.push(new Line(newLines[1].end, newLines[2].start))
+            newLines.forEach(el => {
+                lines.push(el)
+            })
         }
     }
-    
     console.log(lines)
     interval = setInterval(update, 1000/controlsData.UPS)
-}
-
-mouse = {x:0, y:0}
+} 
 
 let restart = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -110,15 +146,6 @@ let inputChange = (evt) => {
     controlsData[ID_TO_NAMES.name(evt.target.id)] = evt.target.value
     
     restart()
-}
-
-let move = (evt) => {
-    mouse.x = evt.layerX
-    mouse.y = evt.layerY
-}
-
-let out = () => {
-
 }
 
 let controlsVisiability = false
@@ -155,7 +182,6 @@ addEventListener("keypress", (evt) => {
 document.getElementById('qoute-box').onclick = () => document.getElementById('qoute-box').style.display = 'none'
 
 controls()
-canvas.onmousemove = move
-canvas.onmouseout = out
+
 
 startSim()
