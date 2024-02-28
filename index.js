@@ -2,9 +2,10 @@ let SPACE_SIZE_X = () => window.innerWidth
 let SPACE_SIZE_Y = () => window.innerHeight
 
 let controlsData = {
+    LINE: false,
     ITERATIONS: 5,
-    ANGLE: 69,
-    UPS: 60
+    ANGLE: 60,
+    UPS: 60,
 }
 
 class IdContainer {
@@ -31,6 +32,7 @@ class IdContainer {
 
 let ID_TO_NAMES = new IdContainer([
     ['ANGLE', 'angle'],
+    ['LINE', 'cb2-7'],
     ['ITERATIONS', 'iterations'],
     ['UPS', 'ups']
 ])
@@ -121,7 +123,7 @@ class Point{
 }
 
 
-let lines = [new Line(new Point(400, 400), new Point(800, 400)), new Line(new Point(800, 400), new Point(600, 800)), new Line(new Point(600, 800), new Point(400, 400))]
+
 
 
 const update = () => {
@@ -130,8 +132,13 @@ const update = () => {
 }
 
 let interval
+let lines = []
 
 let startSim = () => {
+    lines = controlsData.LINE ? 
+                        [new Line(new Point(SPACE_SIZE_X()*3/10, SPACE_SIZE_Y()*3/10), new Point(SPACE_SIZE_X()*7/10, SPACE_SIZE_Y()*3/10)), new Line(new Point(SPACE_SIZE_X()*7/10, SPACE_SIZE_Y()*3/10), new Point(SPACE_SIZE_X()*5/10, SPACE_SIZE_Y()*9/10)), new Line(new Point(SPACE_SIZE_X()*5/10, SPACE_SIZE_Y()*9/10), new Point(SPACE_SIZE_X()*3/10, SPACE_SIZE_Y()*3/10))] 
+                        : 
+                        [new Line(new Point(SPACE_SIZE_X()/10, SPACE_SIZE_Y()*9/10), new Point(SPACE_SIZE_X()*9/10, SPACE_SIZE_Y()*9/10))]
     for(let i = 0; i<controlsData.ITERATIONS; i++){
         l = lines.length
         for(let j = 0; j < l;j++ ){
@@ -178,11 +185,18 @@ for (let key in inputs){
     input.addEventListener('input', inputChange)
 }
 
+document.getElementById('cb2-7').onchange = (evt) => {
+    controlsData.LINE = evt.target.checked
+    
+    restart()
+}
+
 canvas.width = SPACE_SIZE_X()
 canvas.height = SPACE_SIZE_Y()
 addEventListener("resize", (evt) => {
     canvas.width = SPACE_SIZE_X()
     canvas.height = SPACE_SIZE_Y()
+    restart()
 })  
 
 
