@@ -2,8 +2,8 @@ let SPACE_SIZE_X = () => window.innerWidth
 let SPACE_SIZE_Y = () => window.innerHeight
 
 let controlsData = {
-    ITERATIONS: 2,
-    ANGLE: 45,
+    ITERATIONS: 5,
+    ANGLE: 69,
     UPS: 60
 }
 
@@ -30,11 +30,8 @@ class IdContainer {
 }
 
 let ID_TO_NAMES = new IdContainer([
-    ['MAX_STAR_SIZE', 'star-size'],
-    ['MAX_STAR_SPEED', 'star-speed'],
-    ['CONNECTION_DISTANCE', 'connextion-dist'],
-    ['LINE_THICKNESS_INDEX', 'line-thickness'],
-    ['STARS_AMOUNT', 'star-amount'],
+    ['ANGLE', 'angle'],
+    ['ITERATIONS', 'iterations'],
     ['UPS', 'ups']
 ])
 
@@ -53,29 +50,46 @@ class Line{
     split = (n) => {
         let res = []
         let {start, end} = this
-        for(let i = 0; i<n;i++){
+        for(let i = 0; i<n-1;i++){
             res.push(
                 new Line(
-                    new Point(start.x + (Math.abs(start.x - end.x)*i)/n,
-                    start.y + (Math.abs(start.y - end.y)*i)),
-                    new Point(start.x + (Math.abs(start.x - end.x)*(i+1))/n,
-                    start.y + (Math.abs(start.y - end.y)*(i+1)))
+                    new Point((start.x + (i/(n-i))*end.x)/(1+i/(n-i)),
+                    (start.y + (i/(n-i))*end.y)/(1+i/(n-i))),
+                    new Point((start.x + ((i+1)/(n-(i+1)))*end.x)/(1+(i+1)/(n-i-1)),
+                    (start.y + ((i+1)/(n-(i+1)))*end.y)/(1+(i+1)/(n-i-1)))
                 ))
         }
+        res.push(
+            new Line(
+                res[n-2].end,
+                end
+            ))
         return res
+    }
+
+    get xDif(){
+        return this.start.x - this.end.x
+    }
+    get yDif(){
+        return this.start.y - this.end.y
     }
 
     get midPoint(){
         let {start, end} = this
         return new Point((start.x + end.x)/2, (start.y + end.y)/2)
     }
+
+    get angle(){
+        let {length, yDif,xDif} = this 
+        return Math.atan(xDif/yDif) 
+    }
     
     pointOfTriengle = (angle) => {
-        let {start, midPoint} = this
+        let {start, midPoint, xDif, yDif} = this
         let rad = angle*(Math.PI/180)
-        let gepo = start.distTo(midPoint) / Math.cos(rad)
-        console.log(start.distTo(midPoint) / Math.cos(rad), start.distTo(midPoint))
-        return new Point(start.x + gepo*Math.sin(rad), start.y + gepo*Math.cos(rad))
+        let height = Math.tan(rad)*start.distTo(midPoint)
+        let point = new Point(midPoint.x + Math.sin(this.angle + (yDif < 0 ? 90*Math.PI/180 : -90*Math.PI/180))*height, midPoint.y + Math.cos(this.angle + (yDif < 0 ? 90*Math.PI/180 : -90*Math.PI/180))*height) 
+        return point
     }
 
     draw = () => {
@@ -107,7 +121,7 @@ class Point{
 }
 
 
-let lines = [new Line(new Point(200, 400), new Point(800, 400))]
+let lines = [new Line(new Point(400, 400), new Point(800, 400)), new Line(new Point(800, 400), new Point(600, 800)), new Line(new Point(600, 800), new Point(400, 400))]
 
 
 const update = () => {
@@ -130,7 +144,6 @@ let startSim = () => {
             })
         }
     }
-    console.log(lines)
     interval = setInterval(update, 1000/controlsData.UPS)
 } 
 
