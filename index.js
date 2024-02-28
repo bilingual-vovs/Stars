@@ -40,6 +40,28 @@ let ID_TO_NAMES = new IdContainer([
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
+
+class Triangle{
+    paired = []
+    constructor(a, b, c){
+        this.a = a
+        this.b = b
+        this.c = c
+        this.A 
+    }
+    get midPoints() {
+        return {
+            a: this.a.midPoint,
+            b: this.b.midPoint,
+            c: this.c.midPoint
+        }
+    }
+
+    get innerTriangles (){
+        return []
+    }
+}
+
 class Line{
     constructor(a, b){
         this.start = a
@@ -135,22 +157,7 @@ let interval
 let lines = []
 
 let startSim = () => {
-    lines = controlsData.LINE ? 
-                        [new Line(new Point(SPACE_SIZE_X()*3/10, SPACE_SIZE_Y()*3/10), new Point(SPACE_SIZE_X()*7/10, SPACE_SIZE_Y()*3/10)), new Line(new Point(SPACE_SIZE_X()*7/10, SPACE_SIZE_Y()*3/10), new Point(SPACE_SIZE_X()*5/10, SPACE_SIZE_Y()*9/10)), new Line(new Point(SPACE_SIZE_X()*5/10, SPACE_SIZE_Y()*9/10), new Point(SPACE_SIZE_X()*3/10, SPACE_SIZE_Y()*3/10))] 
-                        : 
-                        [new Line(new Point(SPACE_SIZE_X()/10, SPACE_SIZE_Y()*9/10), new Point(SPACE_SIZE_X()*9/10, SPACE_SIZE_Y()*9/10))]
-    for(let i = 0; i<controlsData.ITERATIONS; i++){
-        l = lines.length
-        for(let j = 0; j < l;j++ ){
-            let line = lines.shift()
-            let newLines = line.split(3)
-            newLines[1] = new Line(newLines[1].start, newLines[1].pointOfTriengle(controlsData.ANGLE))
-            newLines.push(new Line(newLines[1].end, newLines[2].start))
-            newLines.forEach(el => {
-                lines.push(el)
-            })
-        }
-    }
+    
     interval = setInterval(update, 1000/controlsData.UPS)
 } 
 
@@ -183,12 +190,6 @@ for (let key in inputs){
     input.value = controlsData[ID_TO_NAMES.name(input.id)]
 
     input.addEventListener('input', inputChange)
-}
-
-document.getElementById('cb2-7').onchange = (evt) => {
-    controlsData.LINE = evt.target.checked
-    
-    restart()
 }
 
 canvas.width = SPACE_SIZE_X()
