@@ -92,7 +92,7 @@ let startSim = () => {
 
 let restart = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    lines = []
+    bags = []
     clearInterval(interval)
     startSim()
 }
@@ -133,6 +133,12 @@ addEventListener("resize", (evt) => {
 addEventListener("keypress", (evt) => { 
     if (evt.code == 'KeyQ'){
         controls()
+    }
+})
+
+addEventListener("keypress", (evt) => { 
+    if (evt.code == 'KeyR'){
+        restart()
     }
 })
 
