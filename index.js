@@ -2,10 +2,10 @@ let SPACE_SIZE_X = () => window.innerWidth
 let SPACE_SIZE_Y = () => window.innerHeight
 
 let controlsData = {
-    LINE: false,
-    ITERATIONS: 5,
-    ANGLE: 60,
-    UPS: 60,
+    SPEED: 5,
+    BAGS: 500,
+    CATCH: 15,
+    UPS: 30,
 }
 
 class IdContainer {
@@ -31,125 +31,61 @@ class IdContainer {
 }
 
 let ID_TO_NAMES = new IdContainer([
-    ['ANGLE', 'angle'],
-    ['LINE', 'cb2-7'],
-    ['ITERATIONS', 'iterations'],
+    ['SPEED', 'speed'],
+    ['BAGS', 'bags'],
+    ['CATCH', 'catch'],
     ['UPS', 'ups']
 ])
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-class Line{
-    constructor(a, b){
-        this.start = a
-        this.end = b
+let bags = []
+
+class Bag {
+    constructor(x, y, i){
+        this.x = x
+        this.y = y
+        this.i = i
     }
-    get length(){
-        let {start, end} = this
-        return Math.sqrt((start.x - end.x)*(start.x - end.x) + (start.y - end.y)* (start.y - end.y))
+
+    get target(){
+        return bags[this.i+1] || bags[0]
     }
-    split = (n) => {
-        let res = []
-        let {start, end} = this
-        for(let i = 0; i<n-1;i++){
-            res.push(
-                new Line(
-                    new Point((start.x + (i/(n-i))*end.x)/(1+i/(n-i)),
-                    (start.y + (i/(n-i))*end.y)/(1+i/(n-i))),
-                    new Point((start.x + ((i+1)/(n-(i+1)))*end.x)/(1+(i+1)/(n-i-1)),
-                    (start.y + ((i+1)/(n-(i+1)))*end.y)/(1+(i+1)/(n-i-1)))
-                ))
+
+    update = (i) =>{
+        this.i = i
+        let {x, y} = this.target
+        let xdif = x - this.x 
+        let ydif = y - this.y
+        let gepo = Math.sqrt(xdif*xdif + ydif*ydif)
+        this.x += xdif*(controlsData.SPEED/gepo)
+        this.y += ydif*(controlsData.SPEED/gepo)
+        if (Math.sqrt((this.x-x)*(this.x-x) + (this.y-y)*(this.y-y)) < controlsData.SPEED*controlsData.CATCH/10){
+            bags.splice(i+1, 1)
         }
-        res.push(
-            new Line(
-                res[n-2].end,
-                end
-            ))
-        return res
-    }
-
-    get xDif(){
-        return this.start.x - this.end.x
-    }
-    get yDif(){
-        return this.start.y - this.end.y
-    }
-
-    get midPoint(){
-        let {start, end} = this
-        return new Point((start.x + end.x)/2, (start.y + end.y)/2)
-    }
-
-    get angle(){
-        let {length, yDif,xDif} = this 
-        return Math.atan(xDif/yDif) 
-    }
-    
-    pointOfTriengle = (angle) => {
-        let {start, midPoint, xDif, yDif} = this
-        let rad = angle*(Math.PI/180)
-        let height = Math.tan(rad)*start.distTo(midPoint)
-        let point = new Point(midPoint.x + Math.sin(this.angle + (yDif < 0 ? 90*Math.PI/180 : -90*Math.PI/180))*height, midPoint.y + Math.cos(this.angle + (yDif < 0 ? 90*Math.PI/180 : -90*Math.PI/180))*height) 
-        return point
     }
 
     draw = () => {
-        let {start, end} = this
-        ctx.strokeStyle = 'white'
-        ctx.lineWidth = 2
-        ctx.beginPath();
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x, end.y);
-
-        ctx.stroke();
-    }
+        ctx.fillStyle = "rgb(256, 256, 256)"
+        ctx.fillRect(this.x, this.y, 4, 4)
+    } 
 
 }
-
-class Point{
-    constructor(x, y){
-        this.x = x
-        this.y = y
-    }
-    lineTo = (b) => {
-        return new Line(this, b)
-    }
-
-    distTo = (b) => {
-        let a = this
-        return Math.sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y) * (a.y - b.y))
-    }
-}
-
-
-
-
 
 const update = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    lines.forEach(el => el.draw())
+    bags.forEach((el, i) => {
+        el.update(i)
+        el.draw()
+    })
 }
 
 let interval
-let lines = []
 
 let startSim = () => {
-    lines = controlsData.LINE ? 
-                        [new Line(new Point(SPACE_SIZE_X()*3/10, SPACE_SIZE_Y()*3/10), new Point(SPACE_SIZE_X()*7/10, SPACE_SIZE_Y()*3/10)), new Line(new Point(SPACE_SIZE_X()*7/10, SPACE_SIZE_Y()*3/10), new Point(SPACE_SIZE_X()*5/10, SPACE_SIZE_Y()*9/10)), new Line(new Point(SPACE_SIZE_X()*5/10, SPACE_SIZE_Y()*9/10), new Point(SPACE_SIZE_X()*3/10, SPACE_SIZE_Y()*3/10))] 
-                        : 
-                        [new Line(new Point(SPACE_SIZE_X()/10, SPACE_SIZE_Y()*9/10), new Point(SPACE_SIZE_X()*9/10, SPACE_SIZE_Y()*9/10))]
-    for(let i = 0; i<controlsData.ITERATIONS; i++){
-        l = lines.length
-        for(let j = 0; j < l;j++ ){
-            let line = lines.shift()
-            let newLines = line.split(3)
-            newLines[1] = new Line(newLines[1].start, newLines[1].pointOfTriengle(controlsData.ANGLE))
-            newLines.push(new Line(newLines[1].end, newLines[2].start))
-            newLines.forEach(el => {
-                lines.push(el)
-            })
-        }
+    for(let i = 0; i<controlsData.BAGS; i++){
+        bags.push(new Bag(Math.floor(Math.random()*SPACE_SIZE_X()), Math.floor(Math.random()*SPACE_SIZE_Y()), i))
     }
     interval = setInterval(update, 1000/controlsData.UPS)
 } 
@@ -183,12 +119,6 @@ for (let key in inputs){
     input.value = controlsData[ID_TO_NAMES.name(input.id)]
 
     input.addEventListener('input', inputChange)
-}
-
-document.getElementById('cb2-7').onchange = (evt) => {
-    controlsData.LINE = evt.target.checked
-    
-    restart()
 }
 
 canvas.width = SPACE_SIZE_X()
