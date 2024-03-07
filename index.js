@@ -5,6 +5,7 @@ let controlsData = {
     SPEED: 5,
     BAGS: 500,
     CATCH: 15,
+    COLOR: false,
     UPS: 30,
 }
 
@@ -31,15 +32,16 @@ class IdContainer {
 }
 
 let ID_TO_NAMES = new IdContainer([
-    ['SPEED', 'speed'],
-    ['BAGS', 'bags'],
-    ['CATCH', 'catch'],
-    ['UPS', 'ups']
+    ['SPEED', 'speed', false],
+    ['BAGS', 'bags', true],
+    ['CATCH', 'catch', false],
+    ['UPS', 'ups', false]
 ])
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
+let paused = false
 let bags = []
 
 class Bag {
@@ -53,25 +55,36 @@ class Bag {
         return bags[this.i+1] || bags[0]
     }
 
+    get color() {
+        let r = (this.i%32)*8
+        let g = ((512 - r)%32)*8
+        let b = (512 - g) 
+        return controlsData.COLOR ? `rgb(${r}, ${g}, ${b})` : 'rgb(256, 256, 256)'
+    }
+
     update = (i) =>{
-        this.i = i
-        let {x, y} = this.target
-        let xdif = x - this.x 
-        let ydif = y - this.y
-        let gepo = Math.sqrt(xdif*xdif + ydif*ydif)
-        this.x += xdif*(controlsData.SPEED/gepo)
-        this.y += ydif*(controlsData.SPEED/gepo)
-        if (Math.sqrt((this.x-x)*(this.x-x) + (this.y-y)*(this.y-y)) < controlsData.SPEED*controlsData.CATCH/10){
-            bags.splice(i+1, 1)
+        if (!paused){
+            this.i = i
+            let {x, y} = this.target
+            let xdif = x - this.x 
+            let ydif = y - this.y
+            let gepo = Math.sqrt(xdif*xdif + ydif*ydif)
+            this.x += xdif*(controlsData.SPEED/gepo)
+            this.y += ydif*(controlsData.SPEED/gepo)
+            if (isNaN(this.x) || isNaN(this.y)) bags.splice(i, 1)
+            if (Math.sqrt((this.x-x)*(this.x-x) + (this.y-y)*(this.y-y)) < controlsData.SPEED*controlsData.CATCH/10){
+                bags.splice(i+1, 1)
+            }
         }
     }
 
     draw = () => {
-        ctx.fillStyle = "rgb(256, 256, 256)"
+        ctx.fillStyle = this.color
         ctx.fillRect(this.x, this.y, 4, 4)
     } 
 
 }
+
 
 const update = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -97,11 +110,15 @@ let restart = () => {
     startSim()
 }
 
+let pause = () => {
+    paused = !paused
+}
+
 let inputChange = (evt) => {
 
     controlsData[ID_TO_NAMES.name(evt.target.id)] = evt.target.value
+    if (controlsData[ID_TO_NAMES.name(evt.target.id)][2]) restart()
     
-    restart()
 }
 
 let controlsVisiability = false
@@ -126,7 +143,6 @@ canvas.height = SPACE_SIZE_Y()
 addEventListener("resize", (evt) => {
     canvas.width = SPACE_SIZE_X()
     canvas.height = SPACE_SIZE_Y()
-    restart()
 })  
 
 
@@ -134,13 +150,46 @@ addEventListener("keypress", (evt) => {
     if (evt.code == 'KeyQ'){
         controls()
     }
-})
-
-addEventListener("keypress", (evt) => { 
-    if (evt.code == 'KeyR'){
+    else if (evt.code == 'KeyR'){
         restart()
     }
+    else if (evt.code == 'KeyP'){
+        pause()
+    }
 })
+
+addEventListener('keyup', evt => {
+    switch (evt.key){
+        case "ArrowUp":
+            controlsData.SPEED += 1
+            document.getElementById(ID_TO_NAMES.id("SPEED")).value = controlsData.SPEED
+            break
+        case "ArrowDown":
+            controlsData.SPEED -= 1
+            document.getElementById(ID_TO_NAMES.id("SPEED")).value = controlsData.SPEED
+            break
+    }
+})
+
+
+addEventListener("click", evt =>{
+    if (evt.shiftKey) bags.push(new Bag(evt.clientX, evt.clientY, bags.length))
+})
+
+let mouse = false
+
+addEventListener('mousedown', evt => {
+    mouse = true
+})
+
+addEventListener('mousemove', evt => {
+    if (mouse && evt.shiftKey) bags.push(new Bag(evt.clientX, evt.clientY, bags.length))
+})
+
+document.getElementById('cb2-7').onchange = (evt)=>{
+    controlsData.COLOR = evt.target.checked
+}
+
 
 document.getElementById('qoute-box').onclick = () => document.getElementById('qoute-box').style.display = 'none'
 
