@@ -2,12 +2,11 @@ let SPACE_SIZE_X = () => window.innerWidth
 let SPACE_SIZE_Y = () => window.innerHeight
 
 let controlsData = {
-    MAX_STAR_SIZE: 3,
-    MAX_STAR_SPEED: 100,
-    CONNECTION_DISTANCE: 200,
-    LINE_THICKNESS_INDEX: 3,
-    STARS_AMOUNT: 80,
-    UPS: 30
+    SPEED: 5,
+    BAGS: 500,
+    CATCH: 15,
+    COLOR: false,
+    UPS: 30,
 }
 
 class IdContainer {
@@ -33,112 +32,93 @@ class IdContainer {
 }
 
 let ID_TO_NAMES = new IdContainer([
-    ['MAX_STAR_SIZE', 'star-size'],
-    ['MAX_STAR_SPEED', 'star-speed'],
-    ['CONNECTION_DISTANCE', 'connextion-dist'],
-    ['LINE_THICKNESS_INDEX', 'line-thickness'],
-    ['STARS_AMOUNT', 'star-amount'],
-    ['UPS', 'ups']
+    ['SPEED', 'speed', false],
+    ['BAGS', 'bags', true],
+    ['CATCH', 'catch', false],
+    ['UPS', 'ups', false]
 ])
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-class Star{
-    posX = Math.floor(Math.random()*SPACE_SIZE_X())
-    posY = Math.floor(Math.random()*SPACE_SIZE_Y())
-    size = 1 + Math.floor(Math.random()*controlsData.MAX_STAR_SIZE)
-    color = `rgba(256, 256, 256, ${50 + Math.floor(Math.random()*50)})`
-    speedX = controlsData.MAX_STAR_SPEED/2 - Math.random()*controlsData.MAX_STAR_SPEED
-    speedY = controlsData.MAX_STAR_SPEED/2 - Math.random()*controlsData.MAX_STAR_SPEED
+let paused = false
+let bags = []
 
-    lineDist = controlsData.CONNECTION_DISTANCE
-    lineThicknessInd = controlsData.LINE_THICKNESS_INDEX
-
-    ups = controlsData.UPS
-
-    constructor(){
-        
+class Bag {
+    constructor(x, y, i){
+        this.x = x
+        this.y = y
+        this.i = i
     }
 
-    move = () => {
-        this.posX += this.speedX/this.ups
-        this.posY += this.speedY/this.ups
-        if (this.posX > SPACE_SIZE_X() || this.posX < 0){
-            this.speedX = 0-this.speedX
-        }
-        if (this.posY > SPACE_SIZE_Y() || this.posY < 0){
-            this.speedY = 0-this.speedY
-        }
+    get target(){
+        return bags[this.i+1] || bags[0]
     }
 
-    connectTo = (x, y, dist) => {
-        ctx.beginPath()
-        ctx.moveTo(this.posX, this.posY)
-        ctx.lineTo(x, y)
-        ctx.lineWidth = this.lineThicknessInd - dist/(this.lineDist/this.lineThicknessInd)
-        ctx.strokeStyle = this.color
-        ctx.stroke()
+    get color() {
+        let r = (this.i%32)*8
+        let g = ((512 - r)%32)*8
+        let b = (512 - g) 
+        return controlsData.COLOR ? `rgb(${r}, ${g}, ${b})` : 'rgb(256, 256, 256)'
     }
 
-    isClose = (x, y) => {
-        let x2 = this.posX - x
-        let y2 = this.posY - y
-        let dist = Math.sqrt(x2*x2 + y2*y2)
-        if (dist < this.lineDist){
-            this.connectTo(x, y, dist)
+    update = (i) =>{
+        if (!paused){
+            this.i = i
+            let {x, y} = this.target
+            let xdif = x - this.x 
+            let ydif = y - this.y
+            let gepo = Math.sqrt(xdif*xdif + ydif*ydif)
+            this.x += xdif*(controlsData.SPEED/gepo)
+            this.y += ydif*(controlsData.SPEED/gepo)
+            if (isNaN(this.x) || isNaN(this.y)) bags.splice(i, 1)
+            if (Math.sqrt((this.x-x)*(this.x-x) + (this.y-y)*(this.y-y)) < controlsData.SPEED*controlsData.CATCH/10){
+                bags.splice(i+1, 1)
+            }
         }
     }
+
+    draw = () => {
+        ctx.fillStyle = this.color
+        ctx.fillRect(this.x, this.y, 4, 4)
+    } 
+
 }
+
 
 const update = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(el => {
-        ctx.fillStyle = el.color
-        ctx.fillRect(el.posX, el.posY, el.size, el.size)
-        el.isClose(mouse.x, mouse.y)
-        el.move()
-    });
+    bags.forEach((el, i) => {
+        el.update(i)
+        el.draw()
+    })
 }
-
-let stars = []
 
 let interval
 
 let startSim = () => {
-    for (let i = 0; i < controlsData.STARS_AMOUNT; i++){
-        stars.push(new Star())
+    for(let i = 0; i<controlsData.BAGS; i++){
+        bags.push(new Bag(Math.floor(Math.random()*SPACE_SIZE_X()), Math.floor(Math.random()*SPACE_SIZE_Y()), i))
     }
-
-    mouse = {
-        x: SPACE_SIZE_X() + controlsData.CONNECTION_DISTANCE + 20,
-        y: SPACE_SIZE_Y() + controlsData.CONNECTION_DISTANCE + 20
-    }
-
     interval = setInterval(update, 1000/controlsData.UPS)
-}
+} 
 
 let restart = () => {
-    stars = []
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    bags = []
     clearInterval(interval)
     startSim()
+}
+
+let pause = () => {
+    paused = !paused
 }
 
 let inputChange = (evt) => {
 
     controlsData[ID_TO_NAMES.name(evt.target.id)] = evt.target.value
+    if (controlsData[ID_TO_NAMES.name(evt.target.id)][2]) restart()
     
-    restart()
-}
-
-let move = (evt) => {
-    mouse.x = evt.layerX
-    mouse.y = evt.layerY
-}
-
-let out = () => {
-    mouse.x = SPACE_SIZE_X() + controlsData.CONNECTION_DISTANCE + 20,
-    mouse.y = SPACE_SIZE_Y() + controlsData.CONNECTION_DISTANCE + 20
 }
 
 let controlsVisiability = false
@@ -170,12 +150,50 @@ addEventListener("keypress", (evt) => {
     if (evt.code == 'KeyQ'){
         controls()
     }
+    else if (evt.code == 'KeyR'){
+        restart()
+    }
+    else if (evt.code == 'KeyP'){
+        pause()
+    }
 })
+
+addEventListener('keyup', evt => {
+    switch (evt.key){
+        case "ArrowUp":
+            controlsData.SPEED += 1
+            document.getElementById(ID_TO_NAMES.id("SPEED")).value = controlsData.SPEED
+            break
+        case "ArrowDown":
+            controlsData.SPEED -= 1
+            document.getElementById(ID_TO_NAMES.id("SPEED")).value = controlsData.SPEED
+            break
+    }
+})
+
+
+addEventListener("click", evt =>{
+    if (evt.shiftKey) bags.push(new Bag(evt.clientX, evt.clientY, bags.length))
+})
+
+let mouse = false
+
+addEventListener('mousedown', evt => {
+    mouse = true
+})
+
+addEventListener('mousemove', evt => {
+    if (mouse && evt.shiftKey) bags.push(new Bag(evt.clientX, evt.clientY, bags.length))
+})
+
+document.getElementById('cb2-7').onchange = (evt)=>{
+    controlsData.COLOR = evt.target.checked
+}
+
 
 document.getElementById('qoute-box').onclick = () => document.getElementById('qoute-box').style.display = 'none'
 
 controls()
-canvas.onmousemove = move
-canvas.onmouseout = out
+
 
 startSim()
