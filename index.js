@@ -71,6 +71,10 @@ class Bag {
             let gepo = Math.sqrt(xdif*xdif + ydif*ydif)
             this.x += xdif*(controlsData.SPEED/gepo)
             this.y += ydif*(controlsData.SPEED/gepo)
+            if (this.x + 10 > SPACE_SIZE_X()) this.x = SPACE_SIZE_X()-10
+            if (this.y + 10 > SPACE_SIZE_Y()) this.y = SPACE_SIZE_Y()-10
+            if (this.x < 10) this.x = 10
+            if (this.y < 10) this.y = 10
             if (isNaN(this.x) || isNaN(this.y)) bags.splice(i, 1)
             if (Math.sqrt((this.x-x)*(this.x-x) + (this.y-y)*(this.y-y)) < controlsData.SPEED*controlsData.CATCH/10){
                 bags.splice(i+1, 1)
@@ -180,6 +184,10 @@ let mouse = false
 
 addEventListener('mousedown', evt => {
     mouse = true
+})
+
+addEventListener('mouseup', evt => {
+    mouse = false
 })
 
 addEventListener('mousemove', evt => {

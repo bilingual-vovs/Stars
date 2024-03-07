@@ -9,6 +9,11 @@ body{
     overflow-x: hidden;
 }
 
+* {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 html{
     width: 100vw;
     height: 102vh;
